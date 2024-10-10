@@ -1,0 +1,28 @@
+Package: siminsee
+Title: Simulate survival trial data with censoring
+Version: 0.1.0
+Authors@R: c(
+    person("Clémence", "Léguillette", email = "c-leguillette@o-lambret.fr", role = c("aut", "cre")),
+    person("Pierre-Yves", "Cren", email = "p-cren@o-lambret.fr", role = "aut"),
+    person("Youenn", "Drouet", email = "youenn.drouet@lyon.unicancer.fr", role = "aut"))
+Description: Simulate survival trial data with censoring under various scenarios using hospital and INSEE administrative data.
+License: GPL-3
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.2
+LazyData: true
+Imports: 
+    dplyr,
+    stats,
+    survival,
+    survminer,
+    ggplot2,
+    ggtext,
+    patchwork,
+    tidyr,
+    ggh4x (>= 0.2.8.9000)  
+Remotes:  
+    teunbrand/ggh4x
+Suggests: 
+    knitr,
+    rmarkdown

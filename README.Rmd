@@ -1,0 +1,201 @@
+---
+output: github_document
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "man/figures/README-",
+  out.width = "100%"
+)
+```
+
+# siminsee
+
+<!-- badges: start -->
+<!-- badges: end -->
+
+The goal of Siminsee is to simulate survival trial data with censoring under various scenarios using hospital and Institute of Statistics and Economic Studies (INSEE) administrative data.
+
+We considered here three approaches to estimate overall survival, depending on the different sources  of data that can provide information on the patients' vital status. The first approach, referred to below as EMR, considers only vital status data obtained from the electronic medical record (EMR), that is, hospital data. The second approach, referred to as EMR_INSEE, adds vital status data supplied by the INSEE to hospital data. In the third approach, referred to as EMR_INSEE_IMP, an imputation of the vital status of patients whose death is not known to the INSEE is added to the second approach, on the assumption that these patients are alive on the date the INSEE file was queried. 
+
+## Installation
+
+You can install the development version of siminsee as follows:
+
+``` r
+# install.packages("devtools")
+devtools::install_github("Cleguillette/siminsee")
+```
+
+```{r, warning=FALSE}
+library(siminsee)
+```
+
+## Simulations
+
+We use the "simulate_surv" function to simulate different scenarios with parameters. 
+
+```{r nlisttrial}
+simulate_surv(scenario = 9, 
+  nrepeat = rep(1, 9),
+  nbp = rep(20000, 9),
+  lambda_d = c(rep(0.001756009, 3), rep(0.008513760, 3), rep(0.02310490, 3)),
+  hr = rep(1, 9),
+  tacc = rep(60, 9),
+  tfu = rep(60, 9),
+  lambda_lfu1 = rep(c(0.01, 0.01, 0.02), 3),
+  lambda_lfu2 = rep(c(0.01, 0.02, 0.02), 3),
+  t_lfu2 = rep(36, 9),
+  hr_lfu = rep(1, 9),
+  pinsee0 = rep(0.9, 9),
+  pinsee1 = rep(0.9, 9),
+  seed = 2023)
+```
+
+## Analyses
+
+### Comparison of estimation approach
+
+We use the 'summarize_outcomes' function to calculate the proportions of patients who experienced events, patients who were lost to follow-up, patients who were excluded alive, or immortal patients according to the estimation approach (EMR, EMR_INSEE and EMR_INSEE_IMP) for each repetition of each scenario of the simulated data.
+
+```{r percentage patients for 1 group comparison}
+sim <- simulate_surv(scenario = 9, 
+  nrepeat = rep(1, 9),
+  nbp = rep(20000, 9),
+  lambda_d = c(rep(0.001756009, 3), rep(0.008513760, 3), rep(0.02310490, 3)),
+  hr = rep(1, 9),
+  tacc = rep(60, 9),
+  tfu = rep(60, 9),
+  lambda_lfu1 = rep(c(0.01, 0.01, 0.02), 3),
+  lambda_lfu2 = rep(c(0.01, 0.02, 0.02), 3),
+  t_lfu2 = rep(36, 9),
+  hr_lfu = rep(1, 9),
+  pinsee0 = rep(0.9, 9),
+  pinsee1 = rep(0.9, 9),
+  seed = 2023)
+
+summarize_outcomes(sim)
+```
+
+We use the 'estimate_approach1' function to perform Cox model analyses of the simulated data to compare the estimation approaches (EMR, EMR_INSEE and EMR_INSEE_IMP). This function returns the hazard ratios by comparing the estimations from each approach with an estimation based on the true data in each scenario and repetition.
+
+This function should be used when all patients are in the same group ('hr' in the 'simulate_surv' function should be equal to 1).
+
+```{r analysis for 1 group comparison}
+estimate_approach1(sim)
+```
+We use the 'plot_hr1' function to plot hazard ratios comparing the estimations from each approach (EMR, EMR_INSEE and EMR_INSEE_IMP) with the estimation based on the "true" data in each simulated scenario.
+
+This function should be used when all patients are in the same group ('hr' in the 'simulate_surv' function should be equal to 1) with a single repetition for each scenario.
+
+```{r graph_of_HR, fig.width=10, fig.height=7, fig.align = 'center'}
+res <- estimate_approach1(sim)
+plot_hr1(res)
+```
+
+
+We use the 'plot_surv1' function to plot Kaplan-Meier survival curves according to the estimation approach (EMR, EMR_INSEE and EMR_INSEE_IMP) for the simulated scenarios. 
+
+This function should be used when all patients are in the same group ('hr' in the 'simulate_surv' function should be equal to 1) with a single repetition for each scenario.
+
+```{r graph_of_survival_curves,fig.width=10, fig.height=7, fig.align = 'center'}
+sim <- simulate_surv(scenario = 9, 
+                  nrepeat = rep(1, 9),
+                  nbp = rep(20000, 9),
+                  lambda_d = c(rep(0.001756009, 3), rep(0.008513760, 3), rep(0.02310490, 3)),
+                  hr = rep(1, 9),
+                  tacc = rep(60, 9),
+                  tfu = rep(60, 9),
+                  lambda_lfu1 = rep(c(0.01, 0.01, 0.02), 3),
+                  lambda_lfu2 = rep(c(0.01, 0.02, 0.02), 3),
+                  t_lfu2 = rep(36, 9),
+                  hr_lfu = rep(1, 9),
+                  pinsee0 = rep(0.9, 9),
+                  pinsee1 =rep(0.9, 9),
+                  seed = 2023)
+
+plot_surv1(sim)
+```
+
+
+### Comparison of two groups
+
+We use the 'estimate_approach2' function to perform Cox model analyses of the simulated data to compare the two groups (of identical size and homogeneous recruitment over time). The function returns the results of the analyses according to the three estimation approaches (EMR, EMR_INSEE and EMR_INSEE_IMP) for each scenario and repetition.
+
+
+```{r analysis for 2 groups comparison}
+sim <- simulate_surv(scenario = 12,
+                  nrepeat = rep(500, 12),
+                  nbp = c(rep(1974, 4), rep(525, 4), rep(305, 4)),
+                  lambda_d = c(rep(0.001756009, 4), rep(0.008513760, 4), rep(0.02310490, 4)),
+                  hr = rep(0.7, 12),
+                  tacc =  rep(60, 12),
+                  tfu =   rep(60, 12),
+                  lambda_lfu1 = rep(0.01, 12),
+                  lambda_lfu2 = rep(0.02, 12),
+                  t_lfu2 = rep(36, 12),
+                  hr_lfu = rep(c(rep(1, 2), rep(1.1, 2)), 3),
+                  pinsee0 = rep(c(0.9, 0.95), 6),
+                  pinsee1 = rep(c(0.9, 0.95), 6),
+                  seed = 2023)
+estimate_approach2(sim)
+```
+
+We use the 'calc_mean_coeff2' function to obtain mean estimations of the coefficients of the Cox modeling of repetitions for each scenario according to the three estimation approaches (EMR, EMR_INSEE and EMR_INSEE_IMP).
+
+```{r resume of analyses for 2 groups comparison}
+res <- estimate_approach2(sim) 
+calc_mean_coeff2(res)
+```
+
+We use the 'plot_bias2' function to plot the mean absolute biases in the repetitions for each scenario according to the three estimation approaches (EMR, EMR_INSEE and EMR_INSEE_IMP).
+
+This function should be used when there is a difference in survival between the two groups ('hr' in the 'simulate_surv' function should not be equal to 1).
+
+```{r graph_of_mean_absolute_biais,fig.width=10, fig.height=7, fig.align = 'center'}
+mean_res <- calc_mean_coeff2(res) 
+plot_bias2(mean_res)
+```
+
+We use the 'plot_beta2' function to plot the $\beta$ risk calculated for the repetitions in each scenario according to the three estimation approaches  (EMR, EMR_INSEE and EMR_INSEE_IMP).
+
+This function should be used when there is a difference in survival between the two groups ('hr' in the 'simulate_surv' function should not be equal to 1).
+
+
+```{r graph_of_beta,fig.width=10, fig.height=7, fig.align = 'center'}
+plot_beta2(mean_res)
+```
+
+We use the 'plot_alpha2' function to plot the $\alpha$ risk calculated for the repetitions in each scenario according to the three estimation approaches (EMR, EMR_INSEE and EMR_INSEE_IMP).
+
+This function should be used when there is no difference in survival between the two groups ('hr' in the 'simulate_surv' function should be equal to 1).
+
+
+```{r graph_of_alpha,fig.width=10, fig.height=7, fig.align = 'center'}
+sim <- simulate_surv(scenario = 12,
+                  nrepeat = rep(500, 12),
+                  nbp = c(rep(1974, 4), rep(525, 4), rep(305, 4)),
+                  lambda_d = c(rep(0.001756009, 4), rep(0.008513760, 4), rep(0.02310490, 4)),
+                  hr = rep(1, 12),
+                  tacc =  rep(60, 12),
+                  tfu =   rep(60, 12),
+                  lambda_lfu1 = rep(0.01, 12),
+                  lambda_lfu2 = rep(0.02, 12),
+                  t_lfu2 = rep(36, 12),
+                  hr_lfu = rep(c(rep(1, 2), rep(1.1, 2)), 3),
+                  pinsee0 = rep(c(0.9, 0.95), 6),
+                  pinsee1 = rep(c(0.9, 0.95), 6),
+                  seed = 2023)
+
+res <- estimate_approach2(sim) 
+
+mean_res <- calc_mean_coeff2(res)
+
+plot_alpha2(mean_res)
+```
+
+
